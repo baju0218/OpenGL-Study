@@ -3,6 +3,7 @@
 
 #include "buffer.h"
 #include "program.h"
+#include "texture.h"
 #include "vertex_layout.h"
 
 #include <memory>
@@ -23,6 +24,8 @@ private:
   std::unique_ptr<VertexLayout> m_vertexLayout;
   std::unique_ptr<Buffer> m_vertexBuffer;
   std::unique_ptr<Buffer> m_indexBuffer;
+  std::unique_ptr<Texture> m_texture;
+  std::unique_ptr<Texture> m_texture2;
 };
 
 #endif // __CONTEXT_H__

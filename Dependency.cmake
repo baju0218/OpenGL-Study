@@ -37,5 +37,16 @@ ExternalProject_Add(
         -DGLFW_BUILD_DOCS=OFF
 )
 
+ExternalProject_Add(
+    dep_stb
+    GIT_REPOSITORY "https://github.com/nothings/stb"
+    GIT_TAG "master"
+    GIT_SHALLOW 1
+    CONFIGURE_COMMAND "" UPDATE_COMMAND "" PATCH_COMMAND "" BUILD_COMMAND "" TEST_COMMAND ""
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy
+        ${PROJECT_BINARY_DIR}/dep_stb-prefix/src/dep_stb/stb_image.h
+        ${DEP_INSTALL_DIR}/include/stb/stb_image.h
+)
+
 set(DEP_LIST dep_spdlog dep_glad dep_glfw)
 set(DEP_LIBS spdlog$<$<CONFIG:Debug>:d> glad glfw3)

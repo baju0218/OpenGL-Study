@@ -12,9 +12,11 @@ project(${PROJECT_NAME})
 add_executable(${PROJECT_NAME} 
     src/buffer.cpp src/buffer.h
     src/context.cpp src/context.h
+    src/image.cpp src/image.h
     src/main.cpp
     src/program.cpp src/program.h
     src/shader.cpp src/shader.h
+    src/texture.cpp src/texture.h
     src/util.cpp src/util.h
     src/vertex_layout.cpp src/vertex_layout.h
 )
