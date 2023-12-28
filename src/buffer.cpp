@@ -2,6 +2,8 @@
 
 #include <glad/glad.h>
 
+#include <iostream>
+
 std::unique_ptr<Buffer> Buffer::Create(uint32_t bufferType, uint32_t usage,
                                        const void *data, size_t dataSize) {
   auto buffer = std::unique_ptr<Buffer>(new Buffer());

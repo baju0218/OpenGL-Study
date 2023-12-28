@@ -7,9 +7,9 @@
 
 // clang-format off
 float g_vertices[] = {
-   0.0f,  0.5f, 0.0f,
-   0.5f, -0.5f, 0.0f,
-  -0.5f, -0.5f, 0.0f,
+   0.0f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+   0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+  -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
 };
 
 uint32_t g_indices[] = {
@@ -31,7 +31,9 @@ bool Context::Init() {
   m_vertexLayout = VertexLayout::Create();
   m_vertexBuffer = Buffer::Create(GL_ARRAY_BUFFER, GL_STATIC_DRAW, g_vertices,
                                   sizeof(g_vertices));
-  m_vertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
+  m_vertexLayout->SetAttrib(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, 0);
+  m_vertexLayout->SetAttrib(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6,
+                            sizeof(float) * 3);
   m_indexBuffer = Buffer::Create(GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW,
                                  g_indices, sizeof(g_indices));
 
@@ -48,6 +50,10 @@ bool Context::Init() {
   if (!m_program)
     return false;
   SPDLOG_INFO("program id: {}", m_program->Get());
+
+  // auto loc = glGetUniformLocation(m_program->Get(), "color");
+  // m_program->Use();
+  // glUniform4f(loc, 1.0f, 1.0f, 0.0f, 1.0f);
 
   return true;
 }
