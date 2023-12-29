@@ -3,6 +3,8 @@
 
 #include "shader.h"
 
+#include <glm/matrix.hpp>
+
 #include <memory>
 #include <vector>
 
@@ -14,6 +16,10 @@ public:
   ~Program();
 
   uint32_t Get() const;
+
+  void SetUniform(const std::string &name, int value) const;
+
+  void SetUniform(const std::string &name, const glm::mat4 &value) const;
 
   void Use() const;
 
