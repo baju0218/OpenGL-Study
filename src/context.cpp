@@ -75,6 +75,91 @@ std::unique_ptr<Context> Context::Create() {
   return std::move(context);
 }
 
+void Context::Reshape(int width, int height) {
+  m_width = width;
+  m_height = height;
+  glViewport(0, 0, m_width, m_height);
+}
+
+void Context::ProcessInput(GLFWwindow *window) {
+  const float cameraSpeed = 0.01f;
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    m_cameraPos += cameraSpeed * m_cameraFront;
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    m_cameraPos -= cameraSpeed * m_cameraFront;
+
+  auto cameraRight = glm::normalize(glm::cross(m_cameraUp, -m_cameraFront));
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    m_cameraPos += cameraSpeed * cameraRight;
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    m_cameraPos -= cameraSpeed * cameraRight;
+}
+
+void Context::MouseButton(int button, int action, double x, double y) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+    if (action == GLFW_PRESS) {
+      // 마우스 조작 시작 시점에 현재 마우스 커서 위치 저장
+      m_prevMousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+      m_cameraControl = true;
+    } else if (action == GLFW_RELEASE) {
+      m_cameraControl = false;
+    }
+  }
+}
+
+void Context::MouseMove(double x, double y) {
+  if (!m_cameraControl)
+    return;
+
+  auto pos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
+  auto deltaPos = pos - m_prevMousePos;
+
+  const float cameraRotSpeed = 0.8f;
+  m_cameraYaw -= deltaPos.x * cameraRotSpeed;
+  m_cameraPitch -= deltaPos.y * cameraRotSpeed;
+
+  if (m_cameraYaw < 0.0f)
+    m_cameraYaw += 360.0f;
+  if (m_cameraYaw > 360.0f)
+    m_cameraYaw -= 360.0f;
+
+  if (m_cameraPitch > 89.0f)
+    m_cameraPitch = 89.0f;
+  if (m_cameraPitch < -89.0f)
+    m_cameraPitch = -89.0f;
+
+  m_prevMousePos = pos;
+}
+
+void Context::Render() {
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);
+
+  m_program->Use();
+  m_cameraFront = glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraYaw),
+                              glm::vec3(0.0f, 1.0f, 0.0f)) *
+                  glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch),
+                              glm::vec3(1.0f, 0.0f, 0.0f)) *
+                  glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
+  auto projection = glm::perspective(
+      glm::radians(45.0f),
+      static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 10.0f);
+  auto view = glm::lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
+
+  for (size_t i = 0; i < cubePositions.size(); i++) {
+    auto &pos = cubePositions[i];
+    auto model = glm::translate(glm::mat4(1.0f), pos);
+    model =
+        glm::rotate(model,
+                    glm::radians(static_cast<float>(glfwGetTime()) * 120.0f +
+                                 20.0f * static_cast<float>(i)),
+                    glm::vec3(1.0f, 0.5f, 0.0f));
+    auto transform = projection * view * model;
+    m_program->SetUniform("transform", transform);
+    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+  }
+}
+
 bool Context::Init() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -128,51 +213,5 @@ bool Context::Init() {
   m_program->SetUniform("tex", 0);
   m_program->SetUniform("tex2", 1);
 
-  // x축으로 -55도 회전
-  auto model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f),
-                           glm::vec3(1.0f, 0.0f, 0.0f));
-  // 카메라는 원점으로부터 z축 방향으로 -3만큼 떨어짐
-  auto view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-  // 종횡비 4:3, 세로화각 45도의 원근 투영
-  auto projection = glm::perspective(glm::radians(45.0f),
-                                     static_cast<float>(WINDOW_WIDTH) /
-                                         static_cast<float>(WINDOW_HEIGHT),
-                                     0.01f, 10.0f);
-  auto transform = projection * view * model;
-  m_program->SetUniform("transform", transform);
-
   return true;
-}
-
-void Context::Render() {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);
-
-  m_program->Use();
-  auto projection = glm::perspective(glm::radians(45.0f),
-                                     static_cast<float>(WINDOW_WIDTH) /
-                                         static_cast<float>(WINDOW_HEIGHT),
-                                     0.01f, 10.0f);
-  auto view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-
-  // auto model = glm::rotate(
-  //     glm::mat4(1.0f), glm::radians(static_cast<float>(glfwGetTime()) *
-  //     120.0f), glm::vec3(1.0f, 0.5f, 0.0f));
-  // auto transform = projection * view * model;
-  // m_program->SetUniform("transform", transform);
-  // glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(uint32_t),
-  //                GL_UNSIGNED_INT, 0);
-
-  for (size_t i = 0; i < cubePositions.size(); i++) {
-    auto &pos = cubePositions[i];
-    auto model = glm::translate(glm::mat4(1.0f), pos);
-    model =
-        glm::rotate(model,
-                    glm::radians(static_cast<float>(glfwGetTime()) * 120.0f +
-                                 20.0f * static_cast<float>(i)),
-                    glm::vec3(1.0f, 0.5f, 0.0f));
-    auto transform = projection * view * model;
-    m_program->SetUniform("transform", transform);
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-  }
 }
