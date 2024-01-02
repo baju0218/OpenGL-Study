@@ -59,5 +59,17 @@ ExternalProject_Add(
         ${DEP_INSTALL_DIR}/include/stb/stb_image.h
 )
 
-set(DEP_LIST dep_spdlog dep_glad dep_glfw)
-set(DEP_LIBS spdlog$<$<CONFIG:Debug>:d> glad glfw3)
+add_library(imgui
+    imgui/imgui_draw.cpp
+    imgui/imgui_tables.cpp
+    imgui/imgui_widgets.cpp
+    imgui/imgui.cpp
+    imgui/imgui_impl_glfw.cpp
+    imgui/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PRIVATE ${DEP_INCLUDE_DIR})
+set(DEP_INCLUDE_DIR ${DEP_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/imgui)
+
+set(DEP_LIST dep_spdlog dep_glad dep_glfw imgui)
+set(DEP_LIBS spdlog$<$<CONFIG:Debug>:d> glad glfw3 imgui)

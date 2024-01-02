@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui.h>
 #include <spdlog/spdlog.h>
 
 // clang-format off
@@ -96,7 +97,7 @@ void Context::ProcessInput(GLFWwindow *window) {
 }
 
 void Context::MouseButton(int button, int action, double x, double y) {
-  if (button == GLFW_MOUSE_BUTTON_LEFT) {
+  if (button == GLFW_MOUSE_BUTTON_RIGHT) {
     if (action == GLFW_PRESS) {
       // 마우스 조작 시작 시점에 현재 마우스 커서 위치 저장
       m_prevMousePos = glm::vec2(static_cast<float>(x), static_cast<float>(y));
@@ -132,6 +133,28 @@ void Context::MouseMove(double x, double y) {
 }
 
 void Context::Render() {
+  if (ImGui::Begin("ui window")) {
+    if (ImGui::ColorEdit4("clear color", glm::value_ptr(m_clearColor))) {
+      glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z,
+                   m_clearColor.a);
+    }
+
+    ImGui::Separator();
+
+    ImGui::DragFloat3("camer pos", glm::value_ptr(m_cameraPos), 0.01f);
+    ImGui::DragFloat("camer yaw", &m_cameraYaw, 0.5f);
+    ImGui::DragFloat("camer pitch", &m_cameraPitch, 0.5f, -89.0f, 89.0f);
+
+    ImGui::Separator();
+
+    if (ImGui::Button("reset camera")) {
+      m_cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+      m_cameraYaw = 0.0f;
+      m_cameraPitch = 0.0f;
+    }
+  }
+  ImGui::End();
+
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
@@ -141,9 +164,10 @@ void Context::Render() {
                   glm::rotate(glm::mat4(1.0f), glm::radians(m_cameraPitch),
                               glm::vec3(1.0f, 0.0f, 0.0f)) *
                   glm::vec4(0.0f, 0.0f, -1.0f, 0.0f);
-  auto projection = glm::perspective(
-      glm::radians(45.0f),
-      static_cast<float>(m_width) / static_cast<float>(m_height), 0.01f, 10.0f);
+  auto projection = glm::perspective(glm::radians(45.0f),
+                                     static_cast<float>(m_width) /
+                                         static_cast<float>(m_height),
+                                     0.01f, 1000.0f);
   auto view = glm::lookAt(m_cameraPos, m_cameraPos + m_cameraFront, m_cameraUp);
 
   for (size_t i = 0; i < cubePositions.size(); i++) {

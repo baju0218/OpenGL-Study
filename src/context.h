@@ -49,6 +49,8 @@ private:
   std::unique_ptr<Buffer> m_indexBuffer;
   std::unique_ptr<Texture> m_texture;
   std::unique_ptr<Texture> m_texture2;
+
+  glm::vec4 m_clearColor{glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)};
 };
 
 #endif // __CONTEXT_H__

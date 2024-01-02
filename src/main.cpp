@@ -3,6 +3,8 @@
 #include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_opengl3.h>
 #include <spdlog/spdlog.h>
 
 void OnFramebufferSizeChange(GLFWwindow *window, int width, int height) {
@@ -86,13 +88,31 @@ int main(int argc, const char **argv) {
 
   OnFramebufferSizeChange(window, WINDOW_WIDTH, WINDOW_HEIGHT);
 
+  auto imguiContext = ImGui::CreateContext();
+  ImGui::SetCurrentContext(imguiContext);
+  ImGui_ImplGlfw_InitForOpenGL(window, true);
+  ImGui_ImplOpenGL3_Init();
+
   SPDLOG_INFO("Start main loop");
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+
     context->ProcessInput(window);
     context->Render();
+
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
     glfwSwapBuffers(window);
   }
+
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext(imguiContext);
 
   context.reset();
   glfwTerminate();
